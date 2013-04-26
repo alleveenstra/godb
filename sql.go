@@ -1,11 +1,11 @@
 package godb
 
 import (
-	"github.com/ziutek/mymysql/mysql"
-	"github.com/ziutek/mymysql/autorc"
-	"fmt"
-	"regexp"
 	"errors"
+	"fmt"
+	"github.com/ziutek/mymysql/autorc"
+	"github.com/ziutek/mymysql/mysql"
+	"regexp"
 )
 
 var Database *autorc.Conn
@@ -29,7 +29,7 @@ func ShowTables() ([]string, error) {
 
 type SqlColumn struct {
 	Field string `sql:"Field"`
-	Type string `sql:"Type"`
+	Type  string `sql:"Type"`
 }
 
 func ShowColumns(db string, fieldLike string) ([]SqlColumn, error) {
@@ -40,12 +40,12 @@ func ShowColumns(db string, fieldLike string) ([]SqlColumn, error) {
 	}
 
 	stmt, prepareErr := Database.Prepare(fmt.Sprintf("SHOW COLUMNS FROM `%s` WHERE `Field` LIKE ?", db)) // sql injection
-	if (prepareErr != nil) {
+	if prepareErr != nil {
 		return data, prepareErr
 	}
 
 	rows, res, execErr := stmt.Exec(fieldLike)
-	if (execErr != nil) {
+	if execErr != nil {
 		return data, execErr
 	}
 
@@ -54,20 +54,20 @@ func ShowColumns(db string, fieldLike string) ([]SqlColumn, error) {
 	data = make([]SqlColumn, len(result.Rows))
 
 	errUnm := Unmarshal(data, result)
-	if (errUnm != nil) {
+	if errUnm != nil {
 		return data, errUnm
 	}
 
 	return data, nil
 }
 
-func SqlAll(sql string) (ResultSet, error) {
+func SqlAll(sql string, parameters ...interface{}) (ResultSet, error) {
 	var result ResultSet
 	stmt, prepareErr := Database.Prepare(sql)
 	if prepareErr != nil {
 		return result, prepareErr
 	}
-	rows, res, execErr := stmt.Exec()
+	rows, res, execErr := stmt.Exec(parameters...)
 	if execErr != nil {
 		return result, execErr
 	}
@@ -75,13 +75,13 @@ func SqlAll(sql string) (ResultSet, error) {
 	return result, nil
 }
 
-func SqlOne(sql string) (mysql.Row, error) {
+func SqlOne(sql string, parameters ...interface{}) (mysql.Row, error) {
 	var result mysql.Row
 	stmt, prepareErr := Database.Prepare(sql)
 	if prepareErr != nil {
 		return result, prepareErr
 	}
-	rows, _, execErr := stmt.Exec()
+	rows, _, execErr := stmt.Exec(parameters...)
 	if execErr != nil {
 		return result, execErr
 	}
